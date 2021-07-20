@@ -4,7 +4,7 @@ A Docker image which allows you to automatically download torrent on a specific 
 
 # HOW TO USE
 
-Just build the docker image or go to my Dockerhub to download a prebuild image: 
+Just build the docker image or go to my Dockerhub to download a prebuild image: https://hub.docker.com/r/monx/alldebrid-torrent-downloader
 
 Launch the container:
 ```docker run -d --name=alldebrid-torrent-downloader -e "API_KEY=<YOUR_ALLDEBRID_API_KEY>" -v <YOUR/TORRENT/PATH>:/download alldebrid-torrent-downloader:latest```
