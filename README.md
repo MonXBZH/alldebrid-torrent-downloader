@@ -1,6 +1,6 @@
 # alldebrid-torrent-downloader
 A Docker image which allows you to automatically download torrent on a specific FS using notify-tools via Alldebrid API. This need you to be premium for API key !
-
+The image should work on multiple OS.
 
 # HOW TO USE
 
