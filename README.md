@@ -88,3 +88,7 @@ do
 
 done < <(inotifywait -m -r --format '%w%f' -e create "${EBOOKS_PATH}")
 ```
+# TODO
+
+- Find a better way to check if the service is available
+- Handle with special characters during basename file to delete torrent file
