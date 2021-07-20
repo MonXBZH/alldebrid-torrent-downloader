@@ -10,7 +10,7 @@ Launch the container:
 ```docker run -d --name=alldebrid-torrent-downloader -e "API_KEY=<YOUR_ALLDEBRID_API_KEY>" -v <YOUR/TORRENT/PATH>:/download monx/alldebrid-torrent-downloader```
 
 # HOW IT WORKS
-The debain-slim based container launches a bash script which gonna check if the alldebrid magnets service is UP, if the service is not available (happens sometimes), you will see in the container's log a message that will indicates you:
+The debian-slim based container launches a bash script which gonna check if the alldebrid magnets service is UP, if the service is not available (happens sometimes), you will see in the container's log a message that will indicates you:
 ```
 Alldebrid Magnets service seems to be down for now (HTTP returns 302)
 Confirm by visiting this link: https://alldebrid.fr/magnets/
