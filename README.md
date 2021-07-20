@@ -7,7 +7,7 @@ A Docker image which allows you to automatically download torrent on a specific 
 Just build the docker image or go to my Dockerhub to download a prebuild image: https://hub.docker.com/r/monx/alldebrid-torrent-downloader
 
 Launch the container:
-```docker run -d --name=alldebrid-torrent-downloader -e "API_KEY=<YOUR_ALLDEBRID_API_KEY>" -v <YOUR/TORRENT/PATH>:/download alldebrid-torrent-downloader:latest```
+```docker run -d --name=alldebrid-torrent-downloader -e "API_KEY=<YOUR_ALLDEBRID_API_KEY>" -v <YOUR/TORRENT/PATH>:/download monx/alldebrid-torrent-downloader```
 
 # HOW IT WORKS
 The debain-slim based container launches a bash script which gonna check if the alldebrid magnets service is UP, if the service is not available (happens sometimes), you will see in the container's log a message that will indicates you:
