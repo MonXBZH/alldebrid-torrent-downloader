@@ -25,7 +25,8 @@ do
                 echo "Uploading ${file_basename} to alldebrid..."
                 TORRENT_ID=$(curl -s -X POST -F "files[]=@${file}" "${UPLOAD_CURL_COMMAND}${ALLDEBRID_API_KEY}"|grep '"id":'| cut -d ':' -f 2)
                 echo "Deleting torrent file ${file_basename}..."
-                rm -f ${file}
+		file_basename=$(echo ${file_basename} | sed 's/_/\\\ /g')
+                rm -f ${file_basename}
                 echo "Get hosting provider link..."
                 TORRENT_LINK=$(curl -s -G --data-urlencode "id=${TORRENT_ID}" "${STATUS_CURL_COMMAND}${ALLDEBRID_API_KEY}"|grep '"link":' |cut -d '"' -f 4 | sed 's/\\//g')
                 echo "Get alldebrid link..."
