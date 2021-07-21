@@ -27,7 +27,7 @@ do
                 echo "Deleting torrent file ${file_basename}..."
                 rm -f ${file}
                 echo "Get hosting provider link..."
-                TORRENT_LINK=$(curl -s -G --data-urlencode "id=${TORRENT_ID}" "${STATUS_CURL_COMMAND}${ALLDEBRID_API_KEY}"| sed 's/\\//g')
+                TORRENT_LINK=$(curl -s -G --data-urlencode "id=${TORRENT_ID}" "${STATUS_CURL_COMMAND}${ALLDEBRID_API_KEY}"|grep '"link":' |cut -d '"' -f 4 | sed 's/\\//g')
                 echo "Get alldebrid link..."
                 DIRECT_LINK=$(curl -s -G --data-urlencode "link=${TORRENT_LINK}" "${LINK_CURL_COMMAND}${ALLDEBRID_API_KEY}" |grep '"link":' |cut -d '"' -f 4 |sed 's/\\//g')
                 echo "Downloading file..."
