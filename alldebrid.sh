@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -x
+set -x
 
 ALLDEBRID_API_KEY=${API_KEY}
 
@@ -21,7 +21,7 @@ while read -r file
 do
         if [[ "${file}" =~ .*torrent$ ]]
         then
-                file_basename="$(echo ${file} |xargs basename)"
+                file_basename="$(echo ${file} |sed 's/ /_/g'|xargs basename)"
                 echo "Uploading ${file_basename} to alldebrid..."
                 TORRENT_ID=$(curl -s -X POST -F "files[]=@${file}" "${UPLOAD_CURL_COMMAND}${ALLDEBRID_API_KEY}"|grep '"id":'| cut -d ':' -f 2)
                 echo "Deleting torrent file ${file_basename}..."
