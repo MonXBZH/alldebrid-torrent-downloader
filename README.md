@@ -7,6 +7,7 @@ The image should work on multiple OS.
 Just build the docker image or go to my Dockerhub to download a prebuild image: https://hub.docker.com/r/monx/alldebrid-torrent-downloader
 
 Launch the container:
+
 ```docker run -d --name=alldebrid-torrent-downloader -e "API_KEY=<YOUR_ALLDEBRID_API_KEY>" -v <YOUR/TORRENT/PATH>:/download monx/alldebrid-torrent-downloader```
 
 # HOW IT WORKS
