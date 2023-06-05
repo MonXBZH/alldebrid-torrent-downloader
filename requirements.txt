@@ -1,4 +1,5 @@
 cffi==1.15.1
+daemonize==2.5.0
 gevent==22.10.2
 greenlet==2.0.2
 inotify==0.2.10

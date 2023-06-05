@@ -1,14 +1,15 @@
 #!/usr/bin/python
 ## Script in Python
 import inotify.adapters
-import pyinotify
 import sys
 import subprocess
 from urllib.request import urlopen
+from daemonize import Daemonize
 
 ALL_DEBRIDE_URL = "https://alldebrid.fr/magnets"
 API_KEY = "USE YOUR API_KEY !"
 ALLDEBRID_API_KEY = str(API_KEY)
+event_type_to_watch = 'IN_CREATE'
 status_code = "0"
 check = "C:"
 
