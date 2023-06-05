@@ -1,0 +1,10 @@
+[Unit]
+Description=watchfs
+After=network.target
+
+[Service]
+PIDFile=/run/watchfs.pid
+ExecStart=/usr/local/bin/watch_fs.py
+
+[Install]
+WantedBy=multi-user.target
