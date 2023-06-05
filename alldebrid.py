@@ -22,12 +22,13 @@ def test_connectivity(URL):
     status_code = int(urllib.request.urlopen(URL).getcode())
     return status_code
 
-
 def read_fs_notify(CHECK_FS):
     check = inotify.adapters.InotifyTree(CHECK_FS)
-    return check
+    return check_return
     
 ## Algo:
-for event in check.event_gen(yield_nones=False):
-  (_, filename) = event
-  print("Found a new file ! ==> "+filename)
+read_fs_notify(check)
+for event in check_return.event_gen(yield_nones=False):
+    test_connectivity(ALL_DEBRIDE_URL)
+    (_, filename) = event
+    print("Found a new file ! ==> "+filename)
