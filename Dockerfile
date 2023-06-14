@@ -1,7 +1,13 @@
 FROM debian:stable-slim
-MAINTAINER MonX <https://github.com/MonXBZH>
+LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 
-RUN apt update && apt install -y inotify-tools curl wget
+RUN apt update && apt install -y inotify-tools curl wget python3 python3-pip
+RUN pip install -r requirements.txt
+
+COPY watchfs.service /etc/systemd/system/
+RUN systemctl daemon-reload
+RUN systemctl enable watchfs
+RUN systemctl start watchfs
 
 RUN mkdir /download
 
@@ -13,5 +19,5 @@ ENV LINK_CURL_COMMAND="https://api.alldebrid.com/v4/link/unlock?agent=nas&apikey
 
 COPY alldebrid.sh /
 
-ENTRYPOINT ["/bin/bash", "/alldebrid.sh" ]
+ENTRYPOINT ["", "" ]
 
