@@ -4,11 +4,6 @@ LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 RUN apt update && apt install -y inotify-tools curl wget python3 python3-pip
 RUN pip install -r requirements.txt
 
-COPY watchfs.service /etc/systemd/system/
-RUN systemctl daemon-reload
-RUN systemctl enable watchfs
-RUN systemctl start watchfs
-
 RUN mkdir /download
 
 ENV EBOOKS_PATH="/download"
