@@ -54,8 +54,8 @@ for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
     file_name, file_extension = os.path.splitext(filename)
     print(file_name, file_extension)
-    if "IN_CLOSE_WRITE" in type_names:
-        if "torrent" in file_extension:
+    if "IN_CREATE" in type_names:
+        if ".torrent" in file_extension:
             print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
             url_status = check_url()
             while url_status != 200:
