@@ -89,9 +89,12 @@ def get_ddl_link():
     print("FOUND", nb_file, "FILE(S) IN THE MAGNET")
     
     temp_dict = {}
-    list_link_dict = {}
-    file = 0
+    temp_dict['filename'] = datas['data']['magnets']['links'][0]['filename']
+    temp_dict['url'] = datas['data']['magnets']['links'][0]['link']
+    list_link_dict = temp_dict
+    file = 1
     while file < nb_file:
+        temp_dict = {}
         temp_dict['filename'] = datas['data']['magnets']['links'][file]['filename']
         temp_dict['url'] = datas['data']['magnets']['links'][file]['link']
         print("temp_dict:", temp_dict)
