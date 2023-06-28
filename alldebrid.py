@@ -80,7 +80,7 @@ def get_ddl_link():
     magnet_response = requests.post(ALLDEBRID_API_PATH+"/magnet/status", params=params, headers=headers)
     jsonResponse = json.dumps(magnet_response.json())
     datas = json.loads(jsonResponse)
-    print("TEST1:", datas)
+    print("DISPLAY JSON:", datas)
     #data = dict(datas)
     nb_file = 0
     for i in datas['data']['magnets']['links']:
@@ -90,15 +90,16 @@ def get_ddl_link():
     
     temp_dict = {}
     list_link_dict = {}
-    i = 0
-    while i < nb_file:
-        temp_dict['filename'] = datas['data']['magnets']['links'][i]['filename']
-        temp_dict['url'] = datas['data']['magnets']['links'][i]['link']
+    file = 0
+    while file < nb_file:
+        temp_dict['filename'] = datas['data']['magnets']['links'][file]['filename']
+        temp_dict['url'] = datas['data']['magnets']['links'][file]['link']
+        print("temp_dict:", temp_dict)
         list_link_dict = list_link_dict.update(temp_dict)
-        print("TEEEEEEEST: ", list_link_dict)
-        i = i + 1
-    print("TEST: ", aaa)
-    return list_link_dict
+        #print("list_link_dict:", list_link_dict)
+        file = file + 1
+    print("FINAL DICT: ", list_link_dict)
+    return list_link_dict, nb_file
 
 def check_link(links):
     params = {
