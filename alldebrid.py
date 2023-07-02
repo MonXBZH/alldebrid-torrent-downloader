@@ -89,20 +89,22 @@ def get_ddl_link():
     print("FOUND", nb_file, "FILE(S) IN THE MAGNET")
     
     temp_dict = {}
-    temp_dict['filename'] = datas['data']['magnets']['links'][0]['filename']
-    temp_dict['url'] = datas['data']['magnets']['links'][0]['link']
-    list_link_dict = temp_dict
-    file = 1
+    list_link_dict = {}
+    file = 0
     while file < nb_file:
-        temp_dict = {}
+        list_link_dict[file] = {}
         temp_dict['filename'] = datas['data']['magnets']['links'][file]['filename']
         temp_dict['url'] = datas['data']['magnets']['links'][file]['link']
-        print("temp_dict:", temp_dict)
-        list_link_dict = list_link_dict.update(temp_dict)
-        #print("list_link_dict:", list_link_dict)
+        print("TEMP DICT:", temp_dict)
+        list_link_dict[file] = temp_dict
         file = file + 1
+        
     print("FINAL DICT: ", list_link_dict)
-    return list_link_dict, nb_file
+    list_link_dict_json_temp = json.dumps(list_link_dict)
+    list_link_dict_json = json.loads(list_link_dict_json_temp)
+    print("JSON RESULT: ", list_link_dict_json)
+    print("FINAL DICT 1: ", list_link_dict_json['1'])
+    return list_link_dict_json, nb_file
 
 def check_link(links):
     params = {
@@ -156,33 +158,33 @@ for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
     file_name, file_extension = os.path.splitext(filename)
     print(file_name, file_extension)
-    # if "IN_CREATE" in type_names:
-    if ".torrent" in file_extension:
-        print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
-        print("TEST ALLDEBRID WEBSITE STATUS...")
-        url_status = check_url()
-        while url_status != 200:
-            print("Status of alldebrid website is KO:", "HTTP",url_status)
+    if "IN_CLOSE_WRITE" in type_names:
+        if ".torrent" in file_extension:
+            print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
+            print("TEST ALLDEBRID WEBSITE STATUS...")
             url_status = check_url()
-        print("alldebrid status is OK.", "Get status code:",url_status)
-        print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
-        idreturn = upload_magnet()
-        magnet_status = check_status()
-        print("CHECK MAGNET STATUS...")
-        while magnet_status != "Ready":
+            while url_status != 200:
+                print("Status of alldebrid website is KO:", "HTTP",url_status)
+                url_status = check_url()
+            print("alldebrid status is OK.", "Get status code:",url_status)
+            print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
+            idreturn = upload_magnet()
             magnet_status = check_status()
-        print("GET LINK FOR MAGNET...")
-        list_link = get_ddl_link()
-        print("CHECK LINK STATUS...")
-        print(list_link)
-        for url in list_link:
-            print(url['url'])
-            print(url['filename'])
-            link_status = check_link(url['url'])
-            if link_status == "success":
-                unlocked_link = unlock_link(url['url'])
-                download_file(url['url'], url['filename'])
-            else:
-                print("One of the link in the magnet is not available !")
-    else:
-        print(filename, "is not a torrent file. Skipping...")
+            print("CHECK MAGNET STATUS...")
+            while magnet_status != "Ready":
+                magnet_status = check_status()
+            print("GET LINK FOR MAGNET...")
+            list_link = get_ddl_link()
+            # print("CHECK LINK STATUS...")
+            # print(list_link)
+            # for url in list_link:
+            #     print(url['url'])
+            #     print(url['filename'])
+            #     link_status = check_link(url['url'])
+            #     if link_status == "success":
+            #         unlocked_link = unlock_link(url['url'])
+            #         download_file(url['url'], url['filename'])
+            #     else:
+            #         print("One of the link in the magnet is not available !")
+        else:
+            print(filename, "is not a torrent file. Skipping...")
