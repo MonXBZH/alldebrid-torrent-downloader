@@ -4,10 +4,9 @@ import urllib.request
 import requests
 import json
 import os
-import urllib.parse
+import time
+from os.path import exists
 from torrentool.api import Torrent
-from collections import Counter
-from pprint import pprint as pp
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
@@ -15,12 +14,12 @@ ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
 def parse_args():
     parser = argparse.ArgumentParser(description="Wait a minute !",
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--directory", type=str, help="Specify directory to watch", default="/tmp")
+    parser.add_argument("-w", "--watch", type=str, help="Specify directory to watch", default="/tmp")
     parser.add_argument("-t", "--token", type=str, help="Alldebrid token to use", default="NOTATOKEN!")
+    parser.add_argument("-d", "--download", type=str, help="Specify directory to download files", default="/tmp")
     args = parser.parse_args()
     return args
 args = parse_args()
-i = inotify.adapters.InotifyTree(args.directory)
 
 def check_url():
     url_status = urllib.request.urlopen("https://alldebrid.fr/magnets").getcode()
@@ -42,14 +41,11 @@ def upload_magnet():
         'Accept': 'application/json'
     }
     response = requests.post(ALLDEBRID_API_PATH+"/magnet/upload", params=params, files=files, headers=headers)
-    #print(response)
     jsonResponse = json.dumps(response.json())
-    #print(jsonResponse)
     datas = json.loads(jsonResponse)
-    #print("DATA: ", datas)
     statusreturn = datas['status']
     idreturn = datas['data']['magnets'][0]['id']
-    print(statusreturn)
+    print("UPLOADING MAGNET... : ", statusreturn)
     return idreturn
 
 def check_status():
@@ -64,8 +60,9 @@ def check_status():
     magnet_response = requests.post(ALLDEBRID_API_PATH+"/magnet/status", params=params, headers=headers)
     jsonResponse = json.dumps(magnet_response.json())
     datas = json.loads(jsonResponse)
-    #print(datas)
     magnet_status = datas['data']['magnets']['status']
+    print("Torrent file is in a ", magnet_status, " status !")
+    print("Retrying...")
     return magnet_status
 
 def get_ddl_link():
@@ -80,11 +77,9 @@ def get_ddl_link():
     magnet_response = requests.post(ALLDEBRID_API_PATH+"/magnet/status", params=params, headers=headers)
     jsonResponse = json.dumps(magnet_response.json())
     datas = json.loads(jsonResponse)
-    print("DISPLAY JSON:", datas)
-    #data = dict(datas)
+    magnet_name = datas['data']['magnets']['filename']
     nb_file = 0
     for i in datas['data']['magnets']['links']:
-        print(i['filename'])
         nb_file = nb_file + 1
     print("FOUND", nb_file, "FILE(S) IN THE MAGNET")
     
@@ -95,16 +90,12 @@ def get_ddl_link():
         list_link_dict[file] = {}
         temp_dict['filename'] = datas['data']['magnets']['links'][file]['filename']
         temp_dict['url'] = datas['data']['magnets']['links'][file]['link']
-        print("TEMP DICT:", temp_dict)
-        list_link_dict[file] = temp_dict
+        list_link_dict[file] = dict(temp_dict)
         file = file + 1
         
-    print("FINAL DICT: ", list_link_dict)
     list_link_dict_json_temp = json.dumps(list_link_dict)
     list_link_dict_json = json.loads(list_link_dict_json_temp)
-    print("JSON RESULT: ", list_link_dict_json)
-    print("FINAL DICT 1: ", list_link_dict_json['1'])
-    return list_link_dict_json, nb_file
+    return list_link_dict_json, nb_file, magnet_name
 
 def check_link(links):
     params = {
@@ -118,7 +109,6 @@ def check_link(links):
     link_status_url = requests.post(ALLDEBRID_API_PATH+"/link/infos", params=params, headers=headers)
     jsonResponse = json.dumps(link_status_url.json())
     datas = json.loads(jsonResponse)
-    print(datas)
     link_status = datas['status']
     print("LINK STATUS: ", link_status)
     return link_status
@@ -135,30 +125,32 @@ def unlock_link(links):
     link_to_unlock = requests.post(ALLDEBRID_API_PATH+"/link/unlock", params=params, headers=headers)
     jsonResponse = json.dumps(link_to_unlock.json())
     datas = json.loads(jsonResponse)
-    print(datas)
     unlocked_link = datas['data']['link']
     return unlocked_link
     
 
 def download_file(file_url, filename):
-    params = {
-        'agent': ALLDEBRID_AGENT,
-        'apikey': args.token,
-        'id': idreturn
-    }
-    headers = {
-        'Accept': 'application/json'
-    }
+    print("DOWNLOADING FILE: ", filename)
     file_dl = requests.get(file_url, allow_redirects=True)
-    open(filename, 'wb').write(file_dl.content)
-    #filenamereturn.close()
+    with open(args.download, 'wb') as f:
+        f.write(file_dl.content)
 
-
+def delete_magnet(magnet_name):
+    print("Deleting magent file: ", magnet_name)
+    os.remove(magnet_name)
+    magnet_file = exists(args.watch/magnet_name)
+    if magnet_file == False:
+        print("Magnet file has been deleted.")
+    else:
+        print("CAN'T DELETE MAGNET FILE !")
+        
+i = inotify.adapters.InotifyTree(args.watch)
 for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
+    print(event)
     file_name, file_extension = os.path.splitext(filename)
     print(file_name, file_extension)
-    if "IN_CLOSE_WRITE" in type_names:
+    if "IN_CLOSE_WRITE" or "IN_CREATE" in type_names:
         if ".torrent" in file_extension:
             print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
             print("TEST ALLDEBRID WEBSITE STATUS...")
@@ -173,18 +165,27 @@ for event in i.event_gen(yield_nones=False):
             print("CHECK MAGNET STATUS...")
             while magnet_status != "Ready":
                 magnet_status = check_status()
+                time.sleep(5)
             print("GET LINK FOR MAGNET...")
-            list_link = get_ddl_link()
-            # print("CHECK LINK STATUS...")
-            # print(list_link)
-            # for url in list_link:
-            #     print(url['url'])
-            #     print(url['filename'])
-            #     link_status = check_link(url['url'])
-            #     if link_status == "success":
-            #         unlocked_link = unlock_link(url['url'])
-            #         download_file(url['url'], url['filename'])
-            #     else:
-            #         print("One of the link in the magnet is not available !")
+            list_link, nb_file, magnet_name = get_ddl_link()
+            print("CHECK LINK STATUS...")
+            list_link_json_temp = json.dumps(list_link)
+            list_link_json = json.loads(list_link_json_temp)
+            file = 0
+            while file < nb_file:
+                url_file = list_link_json[str(file)]['url']
+                name_file = list_link_json[str(file)]['filename']
+                link_status = check_link(url_file)
+                if link_status == "success":
+                    print("UNLOCK URL FILE: ", name_file, "WITH URL: ", url_file)
+                    unlocked_link = unlock_link(url_file)
+                    download_file(unlocked_link, name_file)
+                else:
+                    print("One of the link in the magnet is not available !")
+                file = file + 1
+            print("LAUNCHING DELETE FUNCTION...")
+            delete_magnet(magnet_name)
         else:
             print(filename, "is not a torrent file. Skipping...")
+    print("WAITING FOR NEW FILE...")
+    #time.sleep(5)
