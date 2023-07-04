@@ -62,7 +62,6 @@ def check_status():
     datas = json.loads(jsonResponse)
     magnet_status = datas['data']['magnets']['status']
     print("Torrent file is in a ", magnet_status, " status !")
-    print("Retrying...")
     return magnet_status
 
 def get_ddl_link():
@@ -77,7 +76,6 @@ def get_ddl_link():
     magnet_response = requests.post(ALLDEBRID_API_PATH+"/magnet/status", params=params, headers=headers)
     jsonResponse = json.dumps(magnet_response.json())
     datas = json.loads(jsonResponse)
-    magnet_name = datas['data']['magnets']['filename']
     nb_file = 0
     for i in datas['data']['magnets']['links']:
         nb_file = nb_file + 1
@@ -95,7 +93,7 @@ def get_ddl_link():
         
     list_link_dict_json_temp = json.dumps(list_link_dict)
     list_link_dict_json = json.loads(list_link_dict_json_temp)
-    return list_link_dict_json, nb_file, magnet_name
+    return list_link_dict_json, nb_file
 
 def check_link(links):
     params = {
@@ -130,27 +128,28 @@ def unlock_link(links):
     
 
 def download_file(file_url, filename):
-    print("DOWNLOADING FILE: ", filename)
+    download_dir = str(args.download+"/"+filename)
+    print("DOWNLOADING FILE: ", download_dir)
     file_dl = requests.get(file_url, allow_redirects=True)
-    with open(args.download, 'wb') as f:
+    with open(download_dir, 'wb') as f:
         f.write(file_dl.content)
 
 def delete_magnet(magnet_name):
-    print("Deleting magent file: ", magnet_name)
-    os.remove(magnet_name)
-    magnet_file = exists(args.watch/magnet_name)
+    print("Deleting magnet file: ", magnet_name)
+    magnet_file = str(args.download+"/"+magnet_name)
+    os.remove(magnet_file)
     if magnet_file == False:
-        print("Magnet file has been deleted.")
-    else:
         print("CAN'T DELETE MAGNET FILE !")
+    else:
+        print("Magnet file has been deleted.")
         
 i = inotify.adapters.InotifyTree(args.watch)
 for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
-    print(event)
+    print(filename)
     file_name, file_extension = os.path.splitext(filename)
     print(file_name, file_extension)
-    if "IN_CLOSE_WRITE" or "IN_CREATE" in type_names:
+    if "IN_CREATE" in type_names:
         if ".torrent" in file_extension:
             print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
             print("TEST ALLDEBRID WEBSITE STATUS...")
@@ -165,9 +164,10 @@ for event in i.event_gen(yield_nones=False):
             print("CHECK MAGNET STATUS...")
             while magnet_status != "Ready":
                 magnet_status = check_status()
+                print("Retrying...")
                 time.sleep(5)
             print("GET LINK FOR MAGNET...")
-            list_link, nb_file, magnet_name = get_ddl_link()
+            list_link, nb_file = get_ddl_link()
             print("CHECK LINK STATUS...")
             list_link_json_temp = json.dumps(list_link)
             list_link_json = json.loads(list_link_json_temp)
@@ -184,7 +184,7 @@ for event in i.event_gen(yield_nones=False):
                     print("One of the link in the magnet is not available !")
                 file = file + 1
             print("LAUNCHING DELETE FUNCTION...")
-            delete_magnet(magnet_name)
+            delete_magnet(filename)
         else:
             print(filename, "is not a torrent file. Skipping...")
     print("WAITING FOR NEW FILE...")
