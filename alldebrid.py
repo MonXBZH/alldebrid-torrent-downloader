@@ -4,6 +4,7 @@ import urllib.request
 import requests
 import json
 import os
+import sys
 import time
 from os.path import exists
 from torrentool.api import Torrent
@@ -18,6 +19,9 @@ def parse_args():
     parser.add_argument("-t", "--token", type=str, help="Alldebrid token to use", default="NOTATOKEN!")
     parser.add_argument("-d", "--download", type=str, help="Specify directory to download files", default="/tmp")
     args = parser.parse_args()
+    if len(sys.argv)==1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     return args
 args = parse_args()
 
@@ -148,8 +152,7 @@ for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
     print(filename)
     file_name, file_extension = os.path.splitext(filename)
-    print(file_name, file_extension)
-    if "IN_CREATE" in type_names:
+    if "IN_CLOSE_WRITE" in type_names:
         if ".torrent" in file_extension:
             print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
             print("TEST ALLDEBRID WEBSITE STATUS...")
