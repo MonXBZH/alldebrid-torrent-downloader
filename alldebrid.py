@@ -6,7 +6,6 @@ import json
 import os
 import sys
 import time
-from os.path import exists
 from torrentool.api import Torrent
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
@@ -146,49 +145,54 @@ def delete_magnet(magnet_name):
         print("CAN'T DELETE MAGNET FILE !")
     else:
         print("Magnet file has been deleted.")
-        
+
+created_files = set()
 i = inotify.adapters.InotifyTree(args.watch)
 for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
     print(filename)
     file_name, file_extension = os.path.splitext(filename)
+    if "IN_CREATE" in type_names:
+        created_files.add(filename)
     if "IN_CLOSE_WRITE" in type_names:
-        if ".torrent" in file_extension:
-            print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
-            print("TEST ALLDEBRID WEBSITE STATUS...")
-            url_status = check_url()
-            while url_status != 200:
-                print("Status of alldebrid website is KO:", "HTTP",url_status)
+        if filename in created_files:
+            if ".torrent" in file_extension:
+                os.rename(filename, filename+".inprogress")
+                filename = str(filename+".inprogress")
+                print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
+                print("TEST ALLDEBRID WEBSITE STATUS...")
                 url_status = check_url()
-            print("alldebrid status is OK.", "Get status code:",url_status)
-            print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
-            idreturn = upload_magnet()
-            magnet_status = check_status()
-            print("CHECK MAGNET STATUS...")
-            while magnet_status != "Ready":
+                while url_status != 200:
+                    print("Status of alldebrid website is KO:", "HTTP",url_status)
+                    url_status = check_url()
+                print("alldebrid status is OK.", "Get status code:",url_status)
+                print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
+                idreturn = upload_magnet()
                 magnet_status = check_status()
-                print("Retrying...")
-                time.sleep(5)
-            print("GET LINK FOR MAGNET...")
-            list_link, nb_file = get_ddl_link()
-            print("CHECK LINK STATUS...")
-            list_link_json_temp = json.dumps(list_link)
-            list_link_json = json.loads(list_link_json_temp)
-            file = 0
-            while file < nb_file:
-                url_file = list_link_json[str(file)]['url']
-                name_file = list_link_json[str(file)]['filename']
-                link_status = check_link(url_file)
-                if link_status == "success":
-                    print("UNLOCK URL FILE: ", name_file, "WITH URL: ", url_file)
-                    unlocked_link = unlock_link(url_file)
-                    download_file(unlocked_link, name_file)
-                else:
-                    print("One of the link in the magnet is not available !")
-                file = file + 1
-            print("LAUNCHING DELETE FUNCTION...")
-            delete_magnet(filename)
-        else:
-            print(filename, "is not a torrent file. Skipping...")
+                print("CHECK MAGNET STATUS...")
+                while magnet_status != "Ready":
+                    magnet_status = check_status()
+                    print("Retrying...")
+                    time.sleep(5)
+                print("GET LINK FOR MAGNET...")
+                list_link, nb_file = get_ddl_link()
+                print("CHECK LINK STATUS...")
+                list_link_json_temp = json.dumps(list_link)
+                list_link_json = json.loads(list_link_json_temp)
+                file = 0
+                while file < nb_file:
+                    url_file = list_link_json[str(file)]['url']
+                    name_file = list_link_json[str(file)]['filename']
+                    link_status = check_link(url_file)
+                    if link_status == "success":
+                        print("UNLOCK URL FILE: ", name_file, "WITH URL: ", url_file)
+                        unlocked_link = unlock_link(url_file)
+                        download_file(unlocked_link, name_file)
+                    else:
+                        print("One of the link in the magnet is not available !")
+                    file = file + 1
+                print("LAUNCHING DELETE FUNCTION...")
+                delete_magnet(filename)
+            else:
+                print(filename, "is not a torrent file. Skipping...")
     print("WAITING FOR NEW FILE...")
-    #time.sleep(5)
