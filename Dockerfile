@@ -1,19 +1,19 @@
-FROM python:slim-bullseye
+FROM python:latest
 LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 
-WORKDIR /
+RUN mkdir /downloads
+RUN mkdir /watching
 
-RUN mkdir ./download
-RUN mkdir ./watching
-
-ENV TOKEN = "NOTATOKEN"
+ENV TOKEN = ""
 
 VOLUME [ "/watching", "/downloads" ]
 
-COPY alldebrid.py ./
-COPY requirements.txt ./
+COPY alldebrid.py /
+COPY requirements.txt /
 
-RUN pip install -r ./requirements.txt
+RUN pip install -r /requirements.txt
 
-ENTRYPOINT [ "python", "./alldebrid.py" ]
-CMD [ "-w", "./watching", "-d", "./downloads", "-t", "${TOKEN}" ]
+WORKDIR /
+
+ENTRYPOINT [ "python3", "/alldebrid.py" ]
+CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN" ]
