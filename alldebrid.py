@@ -6,10 +6,28 @@ import json
 import os
 import sys
 import time
+import unicodedata
+import re
 from torrentool.api import Torrent
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
+
+def slugify(value, allow_unicode=False):
+    """
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+    """
+    value = str(value)
+    if allow_unicode:
+        value = unicodedata.normalize('NFKC', value)
+    else:
+        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Wait a minute !",
@@ -157,8 +175,9 @@ for event in i.event_gen(yield_nones=False):
     if "IN_CLOSE_WRITE" in type_names:
         if filename in created_files:
             if ".torrent" in file_extension:
-                os.rename(str(filename), str(filename+".inprogress"))
-                filename = str(filename+".inprogress")
+                filenamenew = slugify(filename)
+                os.rename(filename, filenamenew)
+                filename = filenamenew+".inprogress"
                 print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
                 print("TEST ALLDEBRID WEBSITE STATUS...")
                 url_status = check_url()
