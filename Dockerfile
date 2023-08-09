@@ -4,7 +4,10 @@ LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 RUN mkdir /downloads
 RUN mkdir /watching
 
-ENV TOKEN = ""
+ENV TOKEN ""
+ENV USERRUN "root"
+ENV UID "0"
+ENV GID "0"
 
 VOLUME [ "/watching", "/downloads" ]
 
@@ -14,6 +17,9 @@ COPY requirements.txt /
 RUN pip install -r /requirements.txt
 
 WORKDIR /
+RUN groupadd $GID
+RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN
+USER $USERRUN
 
 ENTRYPOINT [ "python3", "/alldebrid.py" ]
 CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN" ]

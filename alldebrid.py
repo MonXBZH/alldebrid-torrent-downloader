@@ -43,13 +43,13 @@ def parse_args():
 args = parse_args()
 
 def check_url():
-    url_status = urllib.request.urlopen("https://alldebrid.fr/magnets").getcode()
+    url_status = urllib.request.urlopen("https://alldebrid.fr/magnets", None, 20).getcode()
     while url_status != 200:
-        url_status = urllib.request.urlopen("https://alldebrid.fr/magnets").getcode()
+        url_status = urllib.request.urlopen("https://alldebrid.fr/magnets", None, 20).getcode()
         print("Alldebrid website seems to be down ! Get status code:", url_status)
     return url_status
 
-def upload_magnet():
+def upload_magnet(filename):
     Torrentfile = Torrent.from_file(filename)
     params = {
         'agent': ALLDEBRID_AGENT,
@@ -175,9 +175,8 @@ for event in i.event_gen(yield_nones=False):
     if "IN_CLOSE_WRITE" in type_names:
         if filename in created_files:
             if ".torrent" in file_extension:
-                filenamenew = slugify(filename)
-                os.rename(filename, filenamenew)
-                filename = filenamenew+".inprogress"
+                os.rename(filename, filename+".inprogress")
+                filename = filename+".inprogress"
                 print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
                 print("TEST ALLDEBRID WEBSITE STATUS...")
                 url_status = check_url()
@@ -186,7 +185,7 @@ for event in i.event_gen(yield_nones=False):
                     url_status = check_url()
                 print("alldebrid status is OK.", "Get status code:",url_status)
                 print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
-                idreturn = upload_magnet()
+                idreturn = upload_magnet(filename)
                 magnet_status = check_status()
                 print("CHECK MAGNET STATUS...")
                 while magnet_status != "Ready":
