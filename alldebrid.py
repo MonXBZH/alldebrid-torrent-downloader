@@ -211,6 +211,6 @@ for event in i.event_gen(yield_nones=False):
                     file = file + 1
                 print("LAUNCHING DELETE FUNCTION...")
                 delete_magnet(filename)
+                print("WAITING FOR NEW FILE...")
             else:
                 print(filename, "is not a torrent file. Skipping...")
-    print("WAITING FOR NEW FILE...")
