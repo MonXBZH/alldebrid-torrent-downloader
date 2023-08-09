@@ -17,8 +17,8 @@ COPY requirements.txt /
 RUN pip install -r /requirements.txt
 
 WORKDIR /
-RUN groupadd $GID
-RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN
+RUN groupadd $GID || true
+RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN || true
 USER $USERRUN
 
 ENTRYPOINT [ "python3", "/alldebrid.py" ]
