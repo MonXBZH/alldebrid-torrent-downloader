@@ -175,10 +175,7 @@ for event in i.event_gen(yield_nones=False):
     if "IN_CLOSE_WRITE" in type_names:
         if filename in created_files:
             if ".torrent" in file_extension:
-                # filenamefix = slugify(filename)
-                # print('FIXED FILENAME', filename)
-                # newfilename = filenamefix+".inprogress"
-                # os.rename(filename, newfilename)
+                # os.rename(filename, filename+".inprogress")
                 # filename = filename+".inprogress"
                 print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
                 print("TEST ALLDEBRID WEBSITE STATUS...")
