@@ -175,6 +175,8 @@ for event in i.event_gen(yield_nones=False):
     if "IN_CLOSE_WRITE" in type_names:
         if filename in created_files:
             if ".torrent" in file_extension:
+                filename = slugify(filename)
+                print('FIXED FILENAME', filename)
                 os.rename(filename, filename+".inprogress")
                 filename = filename+".inprogress"
                 print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
