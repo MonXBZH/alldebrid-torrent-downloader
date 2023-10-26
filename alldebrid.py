@@ -177,7 +177,8 @@ for event in i.event_gen(yield_nones=False):
             if ".torrent" in file_extension:
                 filename = slugify(filename)
                 print('FIXED FILENAME', filename)
-                os.rename(filename, filename+".inprogress")
+                newfilename = filename+".inprogress"
+                os.rename(filename, newfilename)
                 filename = filename+".inprogress"
                 print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
                 print("TEST ALLDEBRID WEBSITE STATUS...")
