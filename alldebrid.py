@@ -6,28 +6,10 @@ import json
 import os
 import sys
 import time
-import unicodedata
-import re
 from torrentool.api import Torrent
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
-
-def slugify(value, allow_unicode=False):
-    """
-    Taken from https://github.com/django/django/blob/master/django/utils/text.py
-    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
-    dashes to single dashes. Remove characters that aren't alphanumerics,
-    underscores, or hyphens. Convert to lowercase. Also strip leading and
-    trailing whitespace, dashes, and underscores.
-    """
-    value = str(value)
-    if allow_unicode:
-        value = unicodedata.normalize('NFKC', value)
-    else:
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
-    value = re.sub(r'[^\w\s-]', '', value.lower())
-    return re.sub(r'[-\s]+', '-', value).strip('-_')
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Wait a minute !",
@@ -35,6 +17,8 @@ def parse_args():
     parser.add_argument("-w", "--watch", type=str, help="Specify directory to watch", default="/tmp")
     parser.add_argument("-t", "--token", type=str, help="Alldebrid token to use", default="NOTATOKEN!")
     parser.add_argument("-d", "--download", type=str, help="Specify directory to download files", default="/tmp")
+    parser.add_argument("-D", "--delete", type=str, help="Delete or not the magnet file after download. If not, the magnet file change from '.inprogress' to '.done'", default="yes")
+    
     args = parser.parse_args()
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -149,15 +133,20 @@ def unlock_link(links):
     
 
 def download_file(file_url, filename):
-    download_dir = str(args.download+"/"+filename)
+    download_dir = str(filename)
     print("DOWNLOADING FILE: ", download_dir)
     file_dl = requests.get(file_url, allow_redirects=True)
     with open(download_dir, 'wb') as f:
         f.write(file_dl.content)
 
+def done_magnet(magnet_name):
+    magnet_filename, magnet_extension = os.path.splitext(magnet_name)
+    os.rename(magnet_name, magnet_filename+".done")
+    print("MAGNET IS NOW IN '.done' STATUS: ", magnet_filename+".done")
+
 def delete_magnet(magnet_name):
     print("Deleting magnet file: ", magnet_name)
-    magnet_file = str(args.download+"/"+magnet_name)
+    magnet_file = str(magnet_name)
     os.remove(magnet_file)
     if magnet_file == False:
         print("CAN'T DELETE MAGNET FILE !")
@@ -168,16 +157,15 @@ created_files = set()
 i = inotify.adapters.InotifyTree(args.watch)
 for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
-    print(filename)
     file_name, file_extension = os.path.splitext(filename)
-    if "IN_CREATE" in type_names:
+    if "IN_OPEN" in type_names:
         created_files.add(filename)
     if "IN_CLOSE_WRITE" in type_names:
         if filename in created_files:
             if ".torrent" in file_extension:
-                # os.rename(filename, filename+".inprogress")
-                # filename = filename+".inprogress"
-                print("FILENAME=[{}] EVENT_TYPES={}".format(filename, type_names))
+                filename = path+"/"+filename
+                os.rename(filename, filename+".inprogress")
+                filename = filename+".inprogress"
                 print("TEST ALLDEBRID WEBSITE STATUS...")
                 url_status = check_url()
                 while url_status != 200:
@@ -209,8 +197,12 @@ for event in i.event_gen(yield_nones=False):
                     else:
                         print("One of the link in the magnet is not available !")
                     file = file + 1
-                print("LAUNCHING DELETE FUNCTION...")
-                delete_magnet(filename)
+                if args.delete == "yes":
+                    print("LAUNCHING DELETE FUNCTION...")
+                    delete_magnet(filename)
+                else:
+                    done_magnet(filename)
+
                 print("WAITING FOR NEW FILE...")
             else:
                 print(filename, "is not a torrent file. Skipping...")

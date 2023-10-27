@@ -8,6 +8,7 @@ ENV TOKEN ""
 ENV USERRUN "root"
 ENV UID "0"
 ENV GID "0"
+ENV DELETE_MAGNET "yes"
 
 VOLUME [ "/watching", "/downloads" ]
 
@@ -23,4 +24,4 @@ RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN || true
 USER $USERRUN
 
 ENTRYPOINT [ "python3", "/alldebrid.py" ]
-CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN" ]
+CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN", "-D" "$DELETE_MAGNET" ]
