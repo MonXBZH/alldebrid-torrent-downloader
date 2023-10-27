@@ -24,4 +24,4 @@ RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN || true
 USER $USERRUN
 
 ENTRYPOINT [ "python3", "/alldebrid.py" ]
-CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN", "-D" "$DELETE_MAGNET" ]
+CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN", "-D", "$DELETE_MAGNET" ]
