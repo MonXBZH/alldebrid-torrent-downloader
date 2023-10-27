@@ -48,6 +48,7 @@ def upload_magnet(filename):
     response = requests.post(ALLDEBRID_API_PATH+"/magnet/upload", params=params, files=files, headers=headers)
     jsonResponse = json.dumps(response.json())
     datas = json.loads(jsonResponse)
+    print("DEBUG DATAS: ", datas)
     statusreturn = datas['status']
     idreturn = datas['data']['magnets'][0]['id']
     print("UPLOADING MAGNET... : ", statusreturn)
