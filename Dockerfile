@@ -1,14 +1,17 @@
-FROM python:latest
+FROM alpine:latest
 LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 
 RUN mkdir /downloads
 RUN mkdir /watching
 
-ENV TOKEN ""
-ENV USERRUN "root"
-ENV UID "0"
-ENV GID "0"
-ENV DELETE_MAGNET "yes"
+RUN apk --update add python3 py3-pip
+RUN apk add --no-cache bash
+
+# ENV TOKEN=NOTATOKEN!
+# ENV USERRUN "root"
+# ENV UID "0"
+# ENV GID "0"
+# ENV DELETE_MAGNET=yes
 
 VOLUME [ "/watching", "/downloads" ]
 
@@ -23,5 +26,9 @@ RUN groupadd $GID || true
 RUN useradd -ms /bin/bash -u $UID -g $GID $USERRUN || true
 USER $USERRUN
 
-ENTRYPOINT [ "python3", "/alldebrid.py" ]
-CMD [ "-w", "./watching", "-d", "./downloads", "-t", "$TOKEN", "-D", "$DELETE_MAGNET" ]
+#RUN echo "python /alldebrid.py -w ./watching -d ./downloads -t $TOKEN -D $DELETE_MAGNET" > /run_script.sh
+COPY run.sh /
+RUN chmod +x /run.sh
+
+ENTRYPOINT [ "bash", "-c", "/run.sh" ]
+#CMD [ "/run_script.sh" ]

@@ -7,6 +7,7 @@ import os
 import sys
 import time
 from torrentool.api import Torrent
+from urllib.request import urlretrieve
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
@@ -26,6 +27,14 @@ def parse_args():
     return args
 args = parse_args()
 
+# Directories for docker volumes
+watching_dir = "/watching"
+download_dir = "/downloads"
+
+# For standalone usage, comment docker volumes and uncomment lines below:
+# watching_dir = args.watch
+# download_dir = args.download
+
 def check_url():
     url_status = urllib.request.urlopen("https://alldebrid.fr/magnets", None, 20).getcode()
     while url_status != 200:
@@ -34,6 +43,7 @@ def check_url():
     return url_status
 
 def upload_magnet(filename):
+    print("DEBUG TOKEN: ", args.token)
     Torrentfile = Torrent.from_file(filename)
     params = {
         'agent': ALLDEBRID_AGENT,
@@ -134,11 +144,14 @@ def unlock_link(links):
     
 
 def download_file(file_url, filename):
-    download_dir = str(filename)
-    print("DOWNLOADING FILE: ", download_dir)
-    file_dl = requests.get(file_url, allow_redirects=True)
-    with open(download_dir, 'wb') as f:
-        f.write(file_dl.content)
+    print("DOWNLOADING FILE: {download_dir}/{filename}")
+    with requests.get(file_url, stream=True, allow_redirects=True, timeout=None) as r:
+        r.raise_for_status()
+        with open(f"{download_dir}/{filename}", 'wb') as f:
+            for chunk in r.iter_content(chunk_size=None):
+                if chunk:
+                    f.write(chunk)
+    return("{download_dir}/{filename}")
 
 def done_magnet(magnet_name):
     magnet_filename, magnet_extension = os.path.splitext(magnet_name)
@@ -155,7 +168,7 @@ def delete_magnet(magnet_name):
         print("Magnet file has been deleted.")
 
 created_files = set()
-i = inotify.adapters.InotifyTree(args.watch)
+i = inotify.adapters.InotifyTree(watching_dir)
 for event in i.event_gen(yield_nones=False):
     (_, type_names, path, filename) = event
     file_name, file_extension = os.path.splitext(filename)
