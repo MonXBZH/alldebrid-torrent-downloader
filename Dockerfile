@@ -4,8 +4,7 @@ LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 RUN mkdir /downloads
 RUN mkdir /watching
 
-RUN apk --update add python3 py3-pip
-RUN apk add --no-cache bash
+RUN apk --update add python3 py3-pip openssl bash
 
 # ENV TOKEN=NOTATOKEN!
 # ENV USERRUN "root"

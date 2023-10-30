@@ -7,7 +7,6 @@ import os
 import sys
 import time
 from torrentool.api import Torrent
-from urllib.request import urlretrieve
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
@@ -144,14 +143,12 @@ def unlock_link(links):
     
 
 def download_file(file_url, filename):
-    print("DOWNLOADING FILE: {download_dir}/{filename}")
-    with requests.get(file_url, stream=True, allow_redirects=True, timeout=None) as r:
-        r.raise_for_status()
-        with open(f"{download_dir}/{filename}", 'wb') as f:
-            for chunk in r.iter_content(chunk_size=None):
-                if chunk:
-                    f.write(chunk)
-    return("{download_dir}/{filename}")
+    print("DOWNLOADING FILE:", download_dir+"/"+filename)
+    file_path = download_dir+"/"+filename
+    response = requests.get(file_url, stream=True)
+    with open(file_path, mode="wb") as file:
+        for chunk in response.iter_content(chunk_size=10 * 1024):
+            file.write(chunk)
 
 def done_magnet(magnet_name):
     magnet_filename, magnet_extension = os.path.splitext(magnet_name)
