@@ -1,17 +1,27 @@
-FROM debian:stable-slim
-MAINTAINER MonX <https://github.com/MonXBZH>
+FROM alpine:latest
+LABEL Author=MonX Author_link=<https://github.com/MonXBZH>
 
-RUN apt update && apt install -y inotify-tools curl wget
+RUN mkdir /downloads /watching
 
-RUN mkdir /download
+RUN apk --update add python3 py3-pip openssl bash
 
-ENV EBOOKS_PATH="/download"
-ENV UPLOAD_CURL_COMMAND="https://api.alldebrid.com/v4/magnet/upload/file?agent=nas&apikey="
-ENV STATUS_CURL_COMMAND="https://api.alldebrid.com/v4/magnet/status?agent=nas&apikey="
-ENV LINK_CURL_COMMAND="https://api.alldebrid.com/v4/link/unlock?agent=nas&apikey="
+ENV USERRUN "root"
+ENV DELETE_MAGNET=yes
 
+VOLUME [ "/watching", "/downloads" ]
 
-COPY alldebrid.sh /
+COPY alldebrid.py /
+COPY requirements.txt /
 
-ENTRYPOINT ["/bin/bash", "/alldebrid.sh" ]
+RUN pip install --upgrade pip --break-system-packages \
+    && pip install -r /requirements.txt --break-system-packages
 
+WORKDIR /
+RUN groupadd $GID || true \
+    && useradd -ms /bin/bash -u $UID -g $GID $USERRUN || true
+USER $USERRUN
+
+COPY run.sh /
+RUN chmod +x /run.sh
+
+ENTRYPOINT [ "bash", "-c", "/run.sh" ]

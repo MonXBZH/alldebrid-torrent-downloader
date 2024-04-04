@@ -1,0 +1,13 @@
+certifi
+charset-normalizer
+click
+distlib
+filelock
+idna
+inotify
+nose
+platformdirs
+requests
+torrentool
+urllib3
+virtualenv
