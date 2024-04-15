@@ -10,6 +10,7 @@ from torrentool.api import Torrent
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
 ALLDEBRID_AGENT = "AllDebridTorrentDownloader"
+ALLDEBRID_MAGNET_URL = "https://alldebrid.fr/magnets"
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Wait a minute !",
@@ -35,9 +36,9 @@ download_dir = "/downloads"
 # download_dir = args.download
 
 def check_url():
-    url_status = urllib.request.urlopen("https://alldebrid.fr/magnets", None, 20).getcode()
+    url_status = urllib.request.urlopen(ALLDEBRID_MAGNET_URL, None, 20).getcode()
     while url_status != 200:
-        url_status = urllib.request.urlopen("https://alldebrid.fr/magnets", None, 20).getcode()
+        url_status = urllib.request.urlopen(ALLDEBRID_MAGNET_URL, None, 20).getcode()
         print("Alldebrid website seems to be down ! Get status code:", url_status)
     return url_status
 
