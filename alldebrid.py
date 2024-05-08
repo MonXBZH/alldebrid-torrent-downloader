@@ -173,6 +173,7 @@ for event in i.event_gen(yield_nones=False):
     if "IN_OPEN" in type_names:
         created_files.add(filename)
     if "IN_CLOSE_WRITE" in type_names:
+        time.sleep(3)
         if filename in created_files:
             if ".torrent" in file_extension:
                 filename = path+"/"+filename
