@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import time
+import re
 from torrentool.api import Torrent
 
 ALLDEBRID_API_PATH = "https://api.alldebrid.com/v4"
@@ -19,6 +20,7 @@ def parse_args():
     parser.add_argument("-t", "--token", type=str, help="Alldebrid token to use", default="NOTATOKEN!")
     parser.add_argument("-d", "--download", type=str, help="Specify directory to download files", default="/tmp")
     parser.add_argument("-D", "--delete", type=str, help="Delete or not the magnet file after download. If not, the magnet file change from '.inprogress' to '.done'", default="yes")
+    parser.add_argument("-T", "--tvshow", type=str, help="Specify if you want the script to automatically create a new folder to download the files. Usefull for TV Shows.", default="no")
     
     args = parser.parse_args()
     if len(sys.argv)==1:
@@ -43,7 +45,6 @@ def check_url():
     return url_status
 
 def upload_magnet(filename):
-    print("DEBUG TOKEN: ", args.token)
     Torrentfile = Torrent.from_file(filename)
     params = {
         'agent': ALLDEBRID_AGENT,
@@ -58,11 +59,33 @@ def upload_magnet(filename):
     response = requests.post(ALLDEBRID_API_PATH+"/magnet/upload", params=params, files=files, headers=headers)
     jsonResponse = json.dumps(response.json())
     datas = json.loads(jsonResponse)
-    print("DEBUG DATAS: ", datas)
     statusreturn = datas['status']
     idreturn = datas['data']['magnets'][0]['id']
     print("UPLOADING MAGNET... : ", statusreturn)
-    return idreturn
+    return idreturn, datas['data']['magnets'][0]['name']
+
+def create_folder(torrentname):
+    print("Creating new folder to download files...")
+    match = re.match(r"(.*?)(S\d+)", torrentname)
+    if match:
+        new_folder = match.group(1).rstrip('.')
+        new_folder_season = match.group(2)
+        print(new_folder, new_folder_season)
+    
+    try:
+        os.mkdir(new_folder)
+    except OSError:
+        print("Creation of the directory %s failed" % new_folder)
+    else:
+        print("Successfully created the directory %s " % new_folder)
+    
+    try:
+        os.mkdir(new_folder+"/"+new_folder_season)
+    except OSError:
+        print("Creation of the directory %s failed" % new_folder+"/"+new_folder_season)
+    else:
+        print("Successfully created the directory %s " % new_folder+"/"+new_folder_season)
+    return new_folder, new_folder_season
 
 def check_status():
     params = {
@@ -143,9 +166,9 @@ def unlock_link(links):
     return unlocked_link
     
 
-def download_file(file_url, filename):
-    print("DOWNLOADING FILE:", download_dir+"/"+filename)
-    file_path = download_dir+"/"+filename
+def download_file(file_url, filename, folder="/"):
+    print("DOWNLOADING FILE:", download_dir+folder+filename)
+    file_path = download_dir+folder+filename
     response = requests.get(file_url, stream=True)
     with open(file_path, mode="wb") as file:
         for chunk in response.iter_content(chunk_size=10 * 1024):
@@ -186,7 +209,7 @@ for event in i.event_gen(yield_nones=False):
                     url_status = check_url()
                 print("alldebrid status is OK.", "Get status code:",url_status)
                 print("UPLOAD MAGNET ON ALLDEBRID WEBSITE...")
-                idreturn = upload_magnet(filename)
+                idreturn, torrentdatas = upload_magnet(filename)
                 magnet_status = check_status()
                 print("CHECK MAGNET STATUS...")
                 while magnet_status != "Ready":
@@ -206,7 +229,11 @@ for event in i.event_gen(yield_nones=False):
                     if link_status == "success":
                         print("UNLOCK URL FILE: ", name_file, "WITH URL: ", url_file)
                         unlocked_link = unlock_link(url_file)
-                        download_file(unlocked_link, name_file)
+                        if args.tvshow == "yes":
+                            folder, folder_season = create_folder(torrentdatas)
+                            download_file(unlocked_link, name_file, "/"+folder+"/"+folder_season+"/")
+                        else:
+                            download_file(unlocked_link, name_file)
                     else:
                         print("One of the link in the magnet is not available !")
                     file = file + 1
