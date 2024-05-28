@@ -7,6 +7,7 @@ RUN apk --update add python3 py3-pip openssl bash
 
 ENV USERRUN "root"
 ENV DELETE_MAGNET=yes
+ENV TVSHOWS=no
 
 VOLUME [ "/watching", "/downloads" ]
 
