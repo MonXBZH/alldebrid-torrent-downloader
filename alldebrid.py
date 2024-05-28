@@ -73,18 +73,18 @@ def create_folder(torrentname):
         print(new_folder, new_folder_season)
     
     try:
-        os.mkdir(new_folder)
+        os.mkdir(download_dir+"/"+new_folder)
     except OSError:
-        print("Creation of the directory %s failed" % new_folder)
+        print("Creation of the directory %s failed" % download_dir+"/"+new_folder)
     else:
-        print("Successfully created the directory %s " % new_folder)
+        print("Successfully created the directory %s " % download_dir+"/"+new_folder)
     
     try:
-        os.mkdir(new_folder+"/"+new_folder_season)
+        os.mkdir(download_dir+"/"+new_folder+"/"+new_folder_season)
     except OSError:
-        print("Creation of the directory %s failed" % new_folder+"/"+new_folder_season)
+        print("Creation of the directory %s failed" % download_dir+"/"+new_folder+"/"+new_folder_season)
     else:
-        print("Successfully created the directory %s " % new_folder+"/"+new_folder_season)
+        print("Successfully created the directory %s " % download_dir+"/"+new_folder+"/"+new_folder_season)
     return new_folder, new_folder_season
 
 def check_status():
