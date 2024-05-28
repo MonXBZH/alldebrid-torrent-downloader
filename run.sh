@@ -1,1 +1,1 @@
-python -u /alldebrid.py -w ./watching -d ./downloads -t $TOKEN -D $DELETE_MAGNET
+python -u /alldebrid.py -w ./watching -d ./downloads -t $TOKEN -D $DELETE_MAGNET -T $TVSHOWS
