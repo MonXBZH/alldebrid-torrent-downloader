@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  alldebrid-torrent-downloader:
+    image: monx/alldebrid-torrent-downloader
+    container_name: alldebrid-torrent-downloader
+    privileged: true
+    restart: unless-stopped
+    environment:
+      TOKEN: "${TOKEN}"
+      DELETE_MAGNET: "${DELETE_MAGNET:-yes}"
+      TVSHOWS: "${TVSHOWS:-no}"
+    volumes:
+      - <your_dir_to_download_files>:/downloads
+      - <your_dir_for_torrent_files>:/watching
